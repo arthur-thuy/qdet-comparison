@@ -4,14 +4,14 @@ import os
 import pandas as pd
 import pickle
 
-from text2props.constants import (
-    QUESTION_DF_COLS as T2P_QUESTION_DF_COLS,
-    CORRECT_TEXTS as T2P_CORRECT_TEXTS,
-    WRONG_TEXTS as T2P_WRONG_TEXTS,
-    Q_TEXT as T2P_Q_TEXT,
-    Q_ID as T2P_Q_ID,
-    DIFFICULTY as T2P_DIFFICULTY,
-)
+# from text2props.constants import (
+#     QUESTION_DF_COLS as T2P_QUESTION_DF_COLS,
+#     CORRECT_TEXTS as T2P_CORRECT_TEXTS,
+#     WRONG_TEXTS as T2P_WRONG_TEXTS,
+#     Q_TEXT as T2P_Q_TEXT,
+#     Q_ID as T2P_Q_ID,
+#     DIFFICULTY as T2P_DIFFICULTY,
+# )
 
 from qdet_utils.constants import (
     DEV,
@@ -48,82 +48,82 @@ class DataManager:
     TF_DF_COLS_ANS_DF = [TF_CORRECT, TF_DESCRIPTION, TF_ANS_ID, TF_QUESTION_ID]
     TF_DF_COLS_TEXT_DIFFICULTY_DF = [TF_DESCRIPTION, TF_QUESTION_ID, DIFFICULTY]
 
-    def convert_to_r2de_format_and_store_dataset(
-            self,
-            dataset: Dict[str, pd.DataFrame],
-            data_dir: str,
-            dataset_name: str,
-    ) -> None:
-        for split in [TRAIN, DEV, TEST]:
-            converted_df = self.convert_df_to_r2de_format(dataset[split])
-            converted_df.to_csv(os.path.join(data_dir, f'r2de_{dataset_name}_{split}.csv'), index=False)
+    # def convert_to_r2de_format_and_store_dataset(
+    #         self,
+    #         dataset: Dict[str, pd.DataFrame],
+    #         data_dir: str,
+    #         dataset_name: str,
+    # ) -> None:
+    #     for split in [TRAIN, DEV, TEST]:
+    #         converted_df = self.convert_df_to_r2de_format(dataset[split])
+    #         converted_df.to_csv(os.path.join(data_dir, f'r2de_{dataset_name}_{split}.csv'), index=False)
 
-    def convert_df_to_r2de_format(self, df: pd.DataFrame) -> pd.DataFrame:
-        assert set(DF_COLS).issubset(set(df.columns))
-        df[self.R2DE_Q_ID] = df[Q_ID].astype(str)
+    # def convert_df_to_r2de_format(self, df: pd.DataFrame) -> pd.DataFrame:
+    #     assert set(DF_COLS).issubset(set(df.columns))
+    #     df[self.R2DE_Q_ID] = df[Q_ID].astype(str)
 
-        if len(df[df[CONTEXT].isnull()]) == 0:
-            logger.info("All questions in the dataset have a context.")
-            df[self.R2DE_Q_TEXT] = df.apply(lambda r: r[CONTEXT] + ' ' + r[QUESTION], axis=1)
-        else:
-            logger.info("Context is not available.")
-            df[self.R2DE_Q_TEXT] = df[QUESTION]
+    #     if len(df[df[CONTEXT].isnull()]) == 0:
+    #         logger.info("All questions in the dataset have a context.")
+    #         df[self.R2DE_Q_TEXT] = df.apply(lambda r: r[CONTEXT] + ' ' + r[QUESTION], axis=1)
+    #     else:
+    #         logger.info("Context is not available.")
+    #         df[self.R2DE_Q_TEXT] = df[QUESTION]
 
-        if len(df[df[CORRECT_ANSWER].isnull()]) == 0:
-            logger.info("Information about the correct choice is available for all the questions in the dataset.")
-            df[self.R2DE_CORRECT_TEXTS] = df.apply(lambda r: [r[OPTION_ + str(r[CORRECT_ANSWER])]], axis=1)
-            df[self.R2DE_WRONG_TEXTS] = df.apply(lambda r: [r[OPTION_ + str(x)] for x in range(4) if x != r[CORRECT_ANSWER]], axis=1)
-        else:
-            logger.info("No information about the text of the answer choices.")
-            df[self.R2DE_CORRECT_TEXTS] = None
-            df[self.R2DE_WRONG_TEXTS] = None
+    #     if len(df[df[CORRECT_ANSWER].isnull()]) == 0:
+    #         logger.info("Information about the correct choice is available for all the questions in the dataset.")
+    #         df[self.R2DE_CORRECT_TEXTS] = df.apply(lambda r: [r[OPTION_ + str(r[CORRECT_ANSWER])]], axis=1)
+    #         df[self.R2DE_WRONG_TEXTS] = df.apply(lambda r: [r[OPTION_ + str(x)] for x in range(4) if x != r[CORRECT_ANSWER]], axis=1)
+    #     else:
+    #         logger.info("No information about the text of the answer choices.")
+    #         df[self.R2DE_CORRECT_TEXTS] = None
+    #         df[self.R2DE_WRONG_TEXTS] = None
 
-        return df[[self.R2DE_Q_ID, self.R2DE_Q_TEXT, self.R2DE_CORRECT_TEXTS, self.R2DE_WRONG_TEXTS]]
+    #     return df[[self.R2DE_Q_ID, self.R2DE_Q_TEXT, self.R2DE_CORRECT_TEXTS, self.R2DE_WRONG_TEXTS]]
 
-    def convert_to_text2props_format_and_store_dataset(
-            self,
-            dataset: Dict[str, pd.DataFrame],
-            data_dir: str,
-            dataset_name: str,
-    ) -> None:
-        df = pd.concat([dataset[TRAIN], dataset[DEV], dataset[TEST]])
-        assert set(DF_COLS).issubset(set(df.columns))
-        out_dict = dict()
-        out_dict[T2P_DIFFICULTY] = dict()
-        for q_id, diff in df[[Q_ID, DIFFICULTY]].values:
-            if q_id in out_dict[T2P_DIFFICULTY].keys():
-                logger.warning(f"Item {str(q_id)} already seen. It was b={out_dict[T2P_DIFFICULTY][q_id]}, now b={diff}.")
-                continue
-            out_dict[T2P_DIFFICULTY][str(q_id)] = float(diff)
-        pickle.dump(out_dict, open(os.path.join(data_dir, f't2p_{dataset_name}_difficulty_dict.p'), 'wb'))
+    # def convert_to_text2props_format_and_store_dataset(
+    #         self,
+    #         dataset: Dict[str, pd.DataFrame],
+    #         data_dir: str,
+    #         dataset_name: str,
+    # ) -> None:
+    #     df = pd.concat([dataset[TRAIN], dataset[DEV], dataset[TEST]])
+    #     assert set(DF_COLS).issubset(set(df.columns))
+    #     out_dict = dict()
+    #     out_dict[T2P_DIFFICULTY] = dict()
+    #     for q_id, diff in df[[Q_ID, DIFFICULTY]].values:
+    #         if q_id in out_dict[T2P_DIFFICULTY].keys():
+    #             logger.warning(f"Item {str(q_id)} already seen. It was b={out_dict[T2P_DIFFICULTY][q_id]}, now b={diff}.")
+    #             continue
+    #         out_dict[T2P_DIFFICULTY][str(q_id)] = float(diff)
+    #     pickle.dump(out_dict, open(os.path.join(data_dir, f't2p_{dataset_name}_difficulty_dict.p'), 'wb'))
 
-        pickle.dump([out_dict[DIFFICULTY][x] for x in dataset[TRAIN][Q_ID].values], open(os.path.join(data_dir, f'y_true_train_{dataset_name}.p'), 'wb'))
-        pickle.dump([out_dict[DIFFICULTY][x] for x in dataset[DEV][Q_ID].values], open(os.path.join(data_dir, f'y_true_dev_{dataset_name}.p'), 'wb'))
-        pickle.dump([out_dict[DIFFICULTY][x] for x in dataset[TEST][Q_ID].values], open(os.path.join(data_dir, f'y_true_test_{dataset_name}.p'), 'wb'))
+    #     pickle.dump([out_dict[DIFFICULTY][x] for x in dataset[TRAIN][Q_ID].values], open(os.path.join(data_dir, f'y_true_train_{dataset_name}.p'), 'wb'))
+    #     pickle.dump([out_dict[DIFFICULTY][x] for x in dataset[DEV][Q_ID].values], open(os.path.join(data_dir, f'y_true_dev_{dataset_name}.p'), 'wb'))
+    #     pickle.dump([out_dict[DIFFICULTY][x] for x in dataset[TEST][Q_ID].values], open(os.path.join(data_dir, f'y_true_test_{dataset_name}.p'), 'wb'))
 
-        for split in [TRAIN, DEV, TEST]:
-            converted_df = self.convert_df_to_text2props_format(dataset[split])
-            converted_df.to_csv(os.path.join(data_dir, f't2p_{dataset_name}_{split}.csv'), index=False)
+    #     for split in [TRAIN, DEV, TEST]:
+    #         converted_df = self.convert_df_to_text2props_format(dataset[split])
+    #         converted_df.to_csv(os.path.join(data_dir, f't2p_{dataset_name}_{split}.csv'), index=False)
 
-    def convert_df_to_text2props_format(self, df: pd.DataFrame) -> pd.DataFrame:
-        assert set(DF_COLS).issubset(set(df.columns))
-        df[T2P_Q_ID] = df[Q_ID].astype(str)
+    # def convert_df_to_text2props_format(self, df: pd.DataFrame) -> pd.DataFrame:
+    #     assert set(DF_COLS).issubset(set(df.columns))
+    #     df[T2P_Q_ID] = df[Q_ID].astype(str)
 
-        if len(df[df[CONTEXT].isnull()]) == 0:
-            logger.info("All questions in the dataset have a context.")
-            df[T2P_Q_TEXT] = df.apply(lambda r: r[CONTEXT] + ' ' + r[QUESTION], axis=1)
-        else:
-            logger.info("Context is not available.")
-            df[T2P_Q_TEXT] = df[QUESTION]
-        if len(df[df[CORRECT_ANSWER].isnull()]) == 0:
-            logger.info("Information about the correct choice is available for all the questions in the dataset.")
-            df[T2P_CORRECT_TEXTS] = df.apply(lambda r: r[OPTION_ + str(r[CORRECT_ANSWER])], axis=1)
-            df[T2P_WRONG_TEXTS] = df.apply(lambda r: [r[OPTION_ + str(x)] for x in range(4) if x != r[CORRECT_ANSWER]], axis=1)
-        else:
-            logger.info("No information about the text of the answer choices.")
-            df[T2P_CORRECT_TEXTS] = None
-            df[T2P_WRONG_TEXTS] = None
-        return df[T2P_QUESTION_DF_COLS]
+    #     if len(df[df[CONTEXT].isnull()]) == 0:
+    #         logger.info("All questions in the dataset have a context.")
+    #         df[T2P_Q_TEXT] = df.apply(lambda r: r[CONTEXT] + ' ' + r[QUESTION], axis=1)
+    #     else:
+    #         logger.info("Context is not available.")
+    #         df[T2P_Q_TEXT] = df[QUESTION]
+    #     if len(df[df[CORRECT_ANSWER].isnull()]) == 0:
+    #         logger.info("Information about the correct choice is available for all the questions in the dataset.")
+    #         df[T2P_CORRECT_TEXTS] = df.apply(lambda r: r[OPTION_ + str(r[CORRECT_ANSWER])], axis=1)
+    #         df[T2P_WRONG_TEXTS] = df.apply(lambda r: [r[OPTION_ + str(x)] for x in range(4) if x != r[CORRECT_ANSWER]], axis=1)
+    #     else:
+    #         logger.info("No information about the text of the answer choices.")
+    #         df[T2P_CORRECT_TEXTS] = None
+    #         df[T2P_WRONG_TEXTS] = None
+    #     return df[T2P_QUESTION_DF_COLS]
 
     def convert_to_transformers_format_and_store_dataset(
             self,
