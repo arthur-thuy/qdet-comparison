@@ -1,11 +1,11 @@
 # These params are needed for / used by all the model types
 
 # Possible values are [RACE_PP, RACE_PP_4K, RACE_PP_8K, RACE_PP_12K, ARC, ARC_BALANCED, AM]
-dataset_name: arc_balanced
+dataset_name: race_pp_4000
 # Possible values are [r2de, text2props, random, majority]
-model_type: r2de
+model_type: transformer
 # If desired, it is possible to specify the name used to save the model.
-model_name: None
+model_name: null
 
 # # # # #
 
@@ -29,3 +29,16 @@ encoding_idx: 2  # possible values are [0, 1, 2]
 # Specific for Text2Props
 feature_eng_config: read
 regression_config: LR  # possible values [RF, LR]
+
+# # # # #
+
+# Specific for Transformer
+pretrained_model: distilbert-base-uncased
+max_length: 256
+pretrained_tokenizer: null  # TODO: how to supply `PreTrainedTokenizerFast` object?
+epochs: 10  # TODO: change back
+batch_size: 16
+early_stopping_patience: 5
+learning_rate: 0.00002  # 2e-5
+weight_decay: 0.01
+eval_batch_size: 128
