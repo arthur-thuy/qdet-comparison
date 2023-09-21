@@ -4,18 +4,25 @@ import os
 from qdet_utils.difficulty_mapping_methods import get_difficulty_mapper
 from qdet_utils.evaluation import evaluate_model
 from qdet_utils.constants import (
-    RACE_PP, ARC, ARC_BALANCED, AM, RACE_PP_4K, RACE_PP_8K, RACE_PP_12K,
-    DATA_DIR, OUTPUT_DIR,
+    RACE_PP,
+    ARC,
+    ARC_BALANCED,
+    AM,
+    RACE_PP_4K,
+    RACE_PP_8K,
+    RACE_PP_12K,
+    DATA_DIR,
+    OUTPUT_DIR,
 )
 
 
 class BaseExperiment:
     def __init__(
-            self,
-            dataset_name: str,
-            data_dir: str = DATA_DIR,
-            output_root_dir: str = OUTPUT_DIR,
-            random_seed: Optional[int] = None,
+        self,
+        dataset_name: str,
+        data_dir: str = DATA_DIR,
+        output_root_dir: str = OUTPUT_DIR,
+        random_seed: Optional[int] = None,
     ):
         self.dataset_name = dataset_name
         self.data_dir = data_dir
@@ -23,9 +30,13 @@ class BaseExperiment:
         self.random_seed = random_seed
 
         self.model = None
-        self.model_name = None  # Used for logging and in the filenames for saving the results.
+        self.model_name = (
+            None  # Used for logging and in the filenames for saving the results.
+        )
         if self.random_seed is not None:
-            self.output_dir = os.path.join(self.output_root_dir, self.dataset_name, 'seed_' + str(self.random_seed))
+            self.output_dir = os.path.join(
+                self.output_root_dir, self.dataset_name, "seed_" + str(self.random_seed)
+            )
         else:
             self.output_dir = os.path.join(self.output_root_dir, self.dataset_name)
 
@@ -43,7 +54,13 @@ class BaseExperiment:
     def get_dataset(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def init_model(self, pretrained_model: Optional = None, model_name: str = 'model', *args, **kwargs):
+    def init_model(
+        self,
+        pretrained_model: Optional[str] = None,
+        model_name: str = "model",
+        *args,
+        **kwargs
+    ):
         raise NotImplementedError()
 
     def train(self, *args, **kwargs):
@@ -68,7 +85,14 @@ class BaseExperiment:
 
     @staticmethod
     def get_discrete_regression(dataset_name):
-        return dataset_name in {RACE_PP, RACE_PP_4K, RACE_PP_8K, RACE_PP_12K, ARC, ARC_BALANCED}
+        return dataset_name in {
+            RACE_PP,
+            RACE_PP_4K,
+            RACE_PP_8K,
+            RACE_PP_12K,
+            ARC,
+            ARC_BALANCED,
+        }
 
     def get_difficulty_range(self, dataset):
         if dataset in {RACE_PP, RACE_PP_4K, RACE_PP_8K, RACE_PP_12K}:
