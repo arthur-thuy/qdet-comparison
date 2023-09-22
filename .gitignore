@@ -4,3 +4,4 @@ venv*
 
 data/
 output/
+output_figures/
