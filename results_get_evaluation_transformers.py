@@ -1,4 +1,5 @@
 import os
+import pickle
 import pandas as pd
 
 from qdet_utils.constants import (
@@ -11,23 +12,18 @@ from qdet_utils.constants import (
     RACE_PP_8K,
     RACE_PP_12K,
     LIST_TF_ENCODINGS,
-    TF_MODELS,
     TF_Q_ONLY,
+    TF_Q_ALL
 )
 from qdet_utils.evaluation import evaluate_model
 from qdet_utils.difficulty_mapping_methods import get_difficulty_mapper
 
 LIST_DATASET_NAMES = [
-    RACE_PP,
     RACE_PP_4K,
-    RACE_PP_8K,
-    RACE_PP_12K,
-    ARC,
-    ARC_BALANCED,
-    AM,
 ]
-
+LIST_TF_ENCODINGS = [TF_Q_ALL]
 RANDOM_SEEDS = [123]  # for the experiments Benedetto used: [0, 1, 2, 3, 4]
+TF_MODELS = ["transformer"]  # TODO: replace by BERT or DISTILBERT when config name is changed
 
 for dataset_name in LIST_DATASET_NAMES:
     discrete_regression = dataset_name in {
@@ -45,20 +41,25 @@ for dataset_name in LIST_DATASET_NAMES:
             if encoding != TF_Q_ONLY and dataset_name == AM:
                 continue
             for random_seed in RANDOM_SEEDS:
-                filename_train = (
-                    f"predictions_train_{model}_{encoding}_{random_seed}.csv"
-                )
-                df_predictions_train = pd.read_csv(
-                    os.path.join(
-                        "data/transformers_predictions", dataset_name, filename_train
-                    )
-                )
-                filename_test = f"predictions_test_{model}_{encoding}_{random_seed}.csv"
-                df_predictions_test = pd.read_csv(
-                    os.path.join(
-                        "data/transformers_predictions", dataset_name, filename_test
-                    )
-                )
+                # filename_train = (
+                #     f"predictions_train_{model}_{encoding}.p"
+                # )
+                # df_predictions_train = pd.read_csv(
+                #     os.path.join(
+                #         "output", dataset_name, f"seed_{random_seed}", filename_train
+                #     )
+                # )
+                df_predictions_train = pd.read_csv(f'data/processed/{dataset_name}_train.csv')
+                df_predictions_train['predicted_difficulty'] = pickle.load(open(f'output/{dataset_name}/seed_{random_seed}/predictions_train_{model}_{encoding}.p', 'rb'))
+
+                # filename_test = f"predictions_test_{model}_{encoding}.p"
+                # df_predictions_test = pd.read_csv(
+                #     os.path.join(
+                #         "output", dataset_name, f"seed_{random_seed}", filename_test
+                #     )
+                # )
+                df_predictions_test = pd.read_csv(f'data/processed/{dataset_name}_test.csv')
+                df_predictions_test['predicted_difficulty'] = pickle.load(open(f'output/{dataset_name}/seed_{random_seed}/predictions_test_{model}_{encoding}.p', 'rb'))
 
                 y_true_train = list(df_predictions_train["difficulty"].values)
                 y_true_test = list(df_predictions_test["difficulty"].values)
