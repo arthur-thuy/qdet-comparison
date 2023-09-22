@@ -141,7 +141,7 @@ class TransformerExperiment(BaseExperiment):
         )
         self.dataset = dataset.remove_columns(["__index_level_0__"])
 
-        # added by Arthur: create self.y_true_test, self.y_true_train, self.y_true_dev
+        # added by Arthur: create self.y_true_test, self.y_true_train
         self.y_true_train = df_train_original[TF_LABEL].values
         self.y_true_test = df_test_original[TF_LABEL].values
 
@@ -191,6 +191,8 @@ class TransformerExperiment(BaseExperiment):
             evaluation_strategy="epoch",
             save_strategy="epoch",
             load_best_model_at_end=True,
+            # logging_dir="logs",
+            logging_strategy="epoch"
             # push_to_hub=False,
         )
         self.trainer = Trainer(
@@ -215,6 +217,8 @@ class TransformerExperiment(BaseExperiment):
         self.trainer.save_model(
             os.path.join(self.output_dir, f"{self.model_name}_{self.input_mode}_model")
         )
+        with open(os.path.join(training_args.output_dir, "train_logs.pickle"), 'wb') as handle:
+            pickle.dump(self.trainer.state.log_history, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     def predict(self, batch_size: int = 16, save_predictions: bool = True):
         if self.trainer is None:
@@ -265,10 +269,15 @@ class TransformerExperiment(BaseExperiment):
 
 
 def compute_metrics(eval_pred):
+    """Determines which metrics to use for evaluation."""
     r_squared = evaluate.load("r_squared")
-    # mse = evaluate.load("mse")
-    # mae = evaluate.load("mae")
-    # pearsonr = evaluate.load("pearsonr")
+    mse = evaluate.load("mse")
+    mae = evaluate.load("mae")
+    pearsonr = evaluate.load("pearsonr")
 
     predictions, labels = eval_pred
-    return {"r_squared": r_squared.compute(predictions=predictions, references=labels)}
+    # return {"r_squared": r_squared.compute(predictions=predictions, references=labels)}
+    return {"r_squared": r_squared(predictions=predictions, references=labels),
+            "mse": mse(predictions=predictions, references=labels),
+            "mae": mae(predictions=predictions, references=labels),
+            "pearsonr": pearsonr(predictions=predictions, references=labels)}
