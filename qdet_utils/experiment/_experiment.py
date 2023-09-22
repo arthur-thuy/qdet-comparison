@@ -69,11 +69,11 @@ class BaseExperiment:
     def predict(self, save_predictions):
         raise NotImplementedError()
 
-    def evaluate(self, compute_correlation: bool = True):
+    def evaluate(self, save_name: Optional[str] = None, compute_correlation: bool = True):
         converted_y_pred_test = [self.difficulty_mapper(x) for x in self.y_pred_test]
         converted_y_pred_train = [self.difficulty_mapper(x) for x in self.y_pred_train]
         evaluate_model(
-            model_name=self.model_name,
+            model_name=save_name if save_name is not None else self.model_name,
             y_pred_test=converted_y_pred_test,
             y_pred_train=converted_y_pred_train,
             y_true_test=self.y_true_test,

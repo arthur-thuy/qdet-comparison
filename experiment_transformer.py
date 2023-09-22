@@ -2,7 +2,6 @@ import yaml
 import logging
 
 from qdet_utils.experiment import TransformerExperiment
-from qdet_utils.constants import TF_Q_ALL
 
 # set logger
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +28,7 @@ def main(experiment_config):
             dataset_name=dataset_name, random_seed=random_seed
         )
         logger.info("Starting dataset loading")
-        experiment.get_dataset(TF_Q_ALL)
+        experiment.get_dataset(experiment_config["input_mode"])
         logger.info("Starting model initialization")
         experiment.init_model(
             experiment_config["pretrained_model"],
@@ -48,7 +47,9 @@ def main(experiment_config):
         logger.info("Starting prediction")
         experiment.predict(experiment_config["eval_batch_size"])
         logger.info("Starting evaluation")
-        experiment.evaluate()
+        experiment.evaluate(
+            save_name=f"{experiment_config['model_name']}_{experiment_config['input_mode']}"
+        )
         return
 
     print("Unknown model_type!")

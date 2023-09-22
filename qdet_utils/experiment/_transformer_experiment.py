@@ -252,7 +252,7 @@ class TransformerExperiment(BaseExperiment):
                 open(
                     os.path.join(
                         self.output_dir,
-                        f"predictions_train{self.model_name}_{self.input_mode}.p",
+                        f"predictions_train_{self.model_name}_{self.input_mode}.p",
                     ),
                     "wb",
                 ),
