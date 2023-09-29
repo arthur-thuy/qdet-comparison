@@ -3,6 +3,19 @@ import os
 import pandas as pd
 import pickle
 
+from datasets import Dataset, DatasetDict
+import evaluate
+from transformers import (
+    AutoTokenizer,
+    DataCollatorWithPadding,
+    AutoModelForSequenceClassification,
+    TrainingArguments,
+    Trainer,
+    PreTrainedTokenizerFast,
+)
+from transformers import EarlyStoppingCallback
+from sklearn.metrics import mean_squared_error
+
 from qdet_utils.experiment import BaseExperiment
 from qdet_utils.constants import (
     OUTPUT_DIR,
@@ -22,18 +35,6 @@ from qdet_utils.constants import (
     VALIDATION,
     TF_DIFFICULTY,
 )
-
-from datasets import Dataset, DatasetDict
-import evaluate
-from transformers import (
-    AutoTokenizer,
-    DataCollatorWithPadding,
-    AutoModelForSequenceClassification,
-    TrainingArguments,
-    Trainer,
-    PreTrainedTokenizerFast,
-)
-from transformers import EarlyStoppingCallback
 
 
 class TransformerExperiment(BaseExperiment):
@@ -172,7 +173,8 @@ class TransformerExperiment(BaseExperiment):
     def train(
         self,
         epochs: int = 10,
-        batch_size: int = 16,
+        train_batch_size: int = 16,
+        eval_batch_size: int = 16,
         early_stopping_patience: int = 5,
         learning_rate: float = 2e-5,
         weight_decay: float = 0.01,
@@ -184,17 +186,22 @@ class TransformerExperiment(BaseExperiment):
                 self.output_dir, f"{self.model_name}_{self.input_mode}"
             ),
             learning_rate=learning_rate,
-            per_device_train_batch_size=batch_size,
-            per_device_eval_batch_size=batch_size,
+            per_device_train_batch_size=train_batch_size,
+            per_device_eval_batch_size=eval_batch_size,
             num_train_epochs=epochs,
             weight_decay=weight_decay,
-            evaluation_strategy="epoch",
-            save_strategy="epoch",
-            load_best_model_at_end=True,
-            # logging_dir="logs",
-            logging_strategy="epoch",
             metric_for_best_model="r_squared",
-            # push_to_hub=False,
+
+            # # evaluate per epoch:
+            # evaluation_strategy="epoch",
+            # save_strategy="epoch",
+            # load_best_model_at_end=True,
+            # logging_strategy="epoch",
+            
+            # evaluate per step:
+            evaluation_strategy="steps",
+            eval_steps=50,
+            load_best_model_at_end=True,
         )
         self.trainer = Trainer(
             model=self.model,
@@ -276,12 +283,14 @@ class TransformerExperiment(BaseExperiment):
 def compute_metrics(eval_pred):
     """Determines which metrics to use for evaluation."""
     r_squared = evaluate.load("r_squared")
-    # mse = evaluate.load("mse")
+    predictions, labels = eval_pred
+    rmse = mean_squared_error(labels, predictions, squared=False)
     # mae = evaluate.load("mae")
     # pearsonr = evaluate.load("pearsonr")
 
     predictions, labels = eval_pred
     return {
         "r_squared": r_squared.compute(predictions=predictions, references=labels),
+        "rmse": rmse,
         # "pearsonr": pearsonr.compute(predictions=predictions, references=labels),
     }

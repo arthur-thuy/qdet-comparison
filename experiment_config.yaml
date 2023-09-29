@@ -18,10 +18,10 @@ random_seed: 123
 input_mode: question_all
 pretrained_model: distilbert-base-uncased
 max_length: 256
-pretrained_tokenizer: null  # TODO: how to supply `PreTrainedTokenizerFast` object?
-epochs: 10  # TODO: change back
+pretrained_tokenizer: null
+epochs: 3
 batch_size: 16
+eval_batch_size: 128
 early_stopping_patience: 5
 learning_rate: 0.00002  # 2e-5
 weight_decay: 0.01
-eval_batch_size: 128
