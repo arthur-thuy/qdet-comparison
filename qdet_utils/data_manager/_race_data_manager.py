@@ -69,9 +69,9 @@ class RaceDatamanager(DataManager):
         df_test = pd.read_csv(os.path.join(data_dir, f'race_pp_{TEST}.csv'))
         subsampled_dataset = dict()
         if balanced_sampling:
-            df_train = pd.concat([df_train[df_train[DIFFICULTY] == 0].sample(training_size, random_state=random_state),
-                                  df_train[df_train[DIFFICULTY] == 1].sample(training_size, random_state=random_state),
-                                  df_train[df_train[DIFFICULTY] == 2].sample(training_size, random_state=random_state)])
+            df_train = pd.concat([df_train[df_train[DIFFICULTY] == 0].sample(training_size // 3, random_state=random_state),
+                                  df_train[df_train[DIFFICULTY] == 1].sample(training_size // 3, random_state=random_state),
+                                  df_train[df_train[DIFFICULTY] == 2].sample(training_size // 3, random_state=random_state)])
         else:
             df_train = df_train.sample(training_size, random_state=random_state)
         df_train.to_csv(os.path.join(output_data_dir, f'race_pp_{training_size}_{TRAIN}.csv'), index=False)
