@@ -24,13 +24,13 @@ def main():
     race_data_dir = "data/raw/RACE"
     race_c_data_dir = "data/raw/race-c-master/data"
     race_pp_dm = RaceDatamanager()
-    # dataset = race_pp_dm.get_racepp_dataset(race_data_dir, race_c_data_dir, DATA_DIR)
-    # # whole RACE++
-    # # race_pp_dm.convert_to_r2de_format_and_store_dataset(dataset, DATA_DIR, RACE_PP)
-    # # race_pp_dm.convert_to_text2props_format_and_store_dataset(dataset, DATA_DIR, RACE_PP)
-    # race_pp_dm.convert_to_transformers_format_and_store_dataset(
-    #     dataset, DATA_DIR, RACE_PP, skip_answers_texts=False
-    # )
+    dataset = race_pp_dm.get_racepp_dataset(race_data_dir, race_c_data_dir, DATA_DIR)
+    # whole RACE++
+    # race_pp_dm.convert_to_r2de_format_and_store_dataset(dataset, DATA_DIR, RACE_PP)
+    # race_pp_dm.convert_to_text2props_format_and_store_dataset(dataset, DATA_DIR, RACE_PP)
+    race_pp_dm.convert_to_transformers_format_and_store_dataset(
+        dataset, DATA_DIR, RACE_PP, skip_answers_texts=False
+    )
 
     # sub-sampled datasets
     for training_size in [4_000, 8_000, 12_000]:
