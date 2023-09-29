@@ -38,6 +38,7 @@ def main(experiment_config):
     experiment.train(
         experiment_config["epochs"],
         experiment_config["batch_size"],
+        experiment_config["eval_batch_size"],
         experiment_config["early_stopping_patience"],
         experiment_config["learning_rate"],
         experiment_config["weight_decay"],
