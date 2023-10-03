@@ -53,6 +53,7 @@ def evaluate_model(
         output_dir: str,
         discrete_regression: bool = False,
         compute_correlation: bool = True,
+        # TODO: add option to change save name if before training
 ):
 
     metrics_test = get_metrics(
