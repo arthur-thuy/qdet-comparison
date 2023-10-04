@@ -34,6 +34,24 @@ def main(experiment_config):
         experiment_config["max_length"],
         experiment_config["pretrained_tokenizer"],
     )
+    ### evaluate before training ###
+    # logger.info("Starting training (just init, zero epochs)")
+    # experiment.train(
+    #     0,
+    #     experiment_config["batch_size"],
+    #     experiment_config["eval_batch_size"],
+    #     experiment_config["early_stopping_patience"],
+    #     experiment_config["learning_rate"],
+    #     experiment_config["weight_decay"],
+    # )
+    logger.info("Starting prediction before training")
+    experiment.predict(experiment_config["eval_batch_size"])
+    logger.info("Starting evaluation before training")
+    experiment.evaluate(
+        save_name=f"{experiment_config['model_name']}_{experiment_config['input_mode']}_init"
+    )
+    ###
+
     logger.info("Starting training")
     experiment.train(
         experiment_config["epochs"],
