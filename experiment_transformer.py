@@ -17,6 +17,7 @@ def main(experiment_config):
         else None
     )
 
+
     model_name = (
         experiment_config["model_name"]
         if experiment_config["model_name"] is not None
@@ -25,6 +26,8 @@ def main(experiment_config):
     experiment = TransformerExperiment(
         dataset_name=dataset_name, random_seed=random_seed
     )
+    logger.info("Set seed")
+    experiment.set_seed()
     logger.info("Starting dataset loading")
     experiment.get_dataset(experiment_config["input_mode"])
     logger.info("Starting model initialization")
@@ -35,15 +38,6 @@ def main(experiment_config):
         experiment_config["pretrained_tokenizer"],
     )
     ### evaluate before training ###
-    # logger.info("Starting training (just init, zero epochs)")
-    # experiment.train(
-    #     0,
-    #     experiment_config["batch_size"],
-    #     experiment_config["eval_batch_size"],
-    #     experiment_config["early_stopping_patience"],
-    #     experiment_config["learning_rate"],
-    #     experiment_config["weight_decay"],
-    # )
     logger.info("Starting prediction before training")
     experiment.predict(experiment_config["eval_batch_size"])
     logger.info("Starting evaluation before training")

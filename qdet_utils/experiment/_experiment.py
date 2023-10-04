@@ -1,5 +1,11 @@
-from typing import Optional
 import os
+import random
+import warnings
+from typing import Optional
+
+import numpy as np
+import torch
+from torch.backends import cudnn
 
 from qdet_utils.difficulty_mapping_methods import get_difficulty_mapper
 from qdet_utils.evaluation import evaluate_model
@@ -81,6 +87,21 @@ class BaseExperiment:
             output_dir=self.output_dir,
             discrete_regression=self.discrete_regression,
             compute_correlation=compute_correlation,
+        )
+
+    def set_seed(self):
+        random.seed(self.random_seed)
+        np.random.seed(self.random_seed)
+        torch.manual_seed(self.random_seed)
+        torch.cuda.manual_seed(self.random_seed)
+        cudnn.deterministic = True
+        cudnn.benchmark = False
+        os.environ["PYTHONHASHSEED"] = str(self.random_seed)
+        warnings.warn(
+            "You have chosen to seed training. "
+            "This will turn on the CUDNN deterministic setting, "
+            "which can slow down your training considerably!",
+            stacklevel=2,
         )
 
     @staticmethod
