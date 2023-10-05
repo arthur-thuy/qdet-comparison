@@ -17,6 +17,8 @@ from qdet_utils.constants import (
     RACE_PP_4K,
     RACE_PP_8K,
     RACE_PP_12K,
+    RACE,
+    RACE_4K,
     DATA_DIR,
     OUTPUT_DIR,
 )
@@ -29,11 +31,13 @@ class BaseExperiment:
         data_dir: str = DATA_DIR,
         output_root_dir: str = OUTPUT_DIR,
         random_seed: Optional[int] = None,
+        regression: bool = True
     ):
         self.dataset_name = dataset_name
         self.data_dir = data_dir
         self.output_root_dir = output_root_dir
         self.random_seed = random_seed
+        self.regression = regression
 
         self.model = None
         self.model_name = (
@@ -75,9 +79,13 @@ class BaseExperiment:
     def predict(self, save_predictions):
         raise NotImplementedError()
 
-    def evaluate(self, save_name: Optional[str] = None, compute_correlation: bool = True):
-        converted_y_pred_test = [self.difficulty_mapper(x) for x in self.y_pred_test]
-        converted_y_pred_train = [self.difficulty_mapper(x) for x in self.y_pred_train]
+    def evaluate(self, save_name: Optional[str] = None, compute_correlation: bool = True):  # TODO: add regression argument and compute class metrics if applicable
+        if self.regression:
+            converted_y_pred_test = [self.difficulty_mapper(x) for x in self.y_pred_test]
+            converted_y_pred_train = [self.difficulty_mapper(x) for x in self.y_pred_train]
+        else:  # NOTE: classification
+            converted_y_pred_test = np.argmax(self.y_pred_test, axis=-1)
+            converted_y_pred_train = np.argmax(self.y_pred_train, axis=-1)
         evaluate_model(
             model_name=save_name if save_name is not None else self.model_name,
             y_pred_test=converted_y_pred_test,
@@ -85,6 +93,7 @@ class BaseExperiment:
             y_true_test=self.y_true_test,
             y_true_train=self.y_true_train,
             output_dir=self.output_dir,
+            regression=self.regression,
             discrete_regression=self.discrete_regression,
             compute_correlation=compute_correlation,
         )
@@ -116,11 +125,25 @@ class BaseExperiment:
         }
 
     def get_difficulty_range(self, dataset):
+        if dataset in {RACE, RACE_4K}:
+            return -1, 2  # TODO: check
         if dataset in {RACE_PP, RACE_PP_4K, RACE_PP_8K, RACE_PP_12K}:
             return -1, 3
         if dataset in {ARC, ARC_BALANCED}:
             return 3, 9
         if dataset in {AM}:
             return -5, +5
+        else:
+            raise NotImplementedError
+        
+    def get_difficulty_labels(self, dataset):
+        if dataset in {RACE, RACE_4K}:
+            return ['middle', 'high']
+        if dataset in {RACE_PP, RACE_PP_4K, RACE_PP_8K, RACE_PP_12K}:
+            return ['middle', 'high', 'university']
+        if dataset in {ARC, ARC_BALANCED}:
+            return ['level_3', 'level_4', 'level_5', 'level_6', 'level_7', 'level_8', 'level_9']
+        if dataset in {AM}:
+            raise ValueError("AM does not have difficulty labels")
         else:
             raise NotImplementedError

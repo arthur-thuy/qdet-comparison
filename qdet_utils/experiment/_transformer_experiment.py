@@ -1,9 +1,10 @@
-from typing import Optional
 import os
-import pandas as pd
 import pickle
+from typing import Optional
 
-from datasets import Dataset, DatasetDict
+import numpy as np
+import pandas as pd
+from datasets import Dataset, DatasetDict, ClassLabel
 import evaluate
 from transformers import (
     AutoTokenizer,
@@ -44,8 +45,11 @@ class TransformerExperiment(BaseExperiment):
         data_dir: str = DATA_DIR,
         output_root_dir: str = OUTPUT_DIR,
         random_seed: Optional[int] = None,
+        regression: bool = True,
     ):
-        super().__init__(dataset_name, data_dir, output_root_dir, random_seed)
+        super().__init__(
+            dataset_name, data_dir, output_root_dir, random_seed, regression
+        )
         self.dataset = None
         self.tokenizer = None
         self.tokenized_dataset = None
@@ -54,7 +58,9 @@ class TransformerExperiment(BaseExperiment):
         self.trainer = None
         self.max_length = None
 
-    def get_dataset(self, input_mode, *args, **kwargs):
+    def get_dataset(
+        self, input_mode, num_labels: Optional[int] = None, *args, **kwargs
+    ):
         df_train_original = pd.read_csv(
             os.path.join(
                 self.data_dir, f"tf_{self.dataset_name}_text_difficulty_train.csv"
@@ -119,13 +125,18 @@ class TransformerExperiment(BaseExperiment):
 
         df_train_original = df_train_original.rename(
             columns={TF_DESCRIPTION: TF_TEXT, TF_DIFFICULTY: TF_LABEL}
-        ).astype({TF_LABEL: float})
+        )
         df_test_original = df_test_original.rename(
             columns={TF_DESCRIPTION: TF_TEXT, TF_DIFFICULTY: TF_LABEL}
-        ).astype({TF_LABEL: float})
+        )
         df_dev_original = df_dev_original.rename(
             columns={TF_DESCRIPTION: TF_TEXT, TF_DIFFICULTY: TF_LABEL}
-        ).astype({TF_LABEL: float})
+        )
+
+        if self.regression:
+            df_train_original = df_train_original.astype({TF_LABEL: float})
+            df_test_original = df_test_original.astype({TF_LABEL: float})
+            df_dev_original = df_dev_original.astype({TF_LABEL: float})
 
         dataset = DatasetDict(
             {
@@ -140,7 +151,17 @@ class TransformerExperiment(BaseExperiment):
                 ),
             }
         )
+        if not self.regression:
+            dataset = dataset.cast_column(
+                TF_LABEL,
+                ClassLabel(
+                    num_classes=num_labels,
+                    names=self.get_difficulty_labels(self.dataset_name),
+                ),
+            )
         self.dataset = dataset.remove_columns(["__index_level_0__"])
+
+        print(self.dataset[TRAIN].features)
 
         # added by Arthur: create self.y_true_test, self.y_true_train
         self.y_true_train = df_train_original[TF_LABEL].values
@@ -152,6 +173,7 @@ class TransformerExperiment(BaseExperiment):
         model_name: str = "model",
         max_length: int = 256,
         pretrained_tokenizer: Optional[PreTrainedTokenizerFast] = None,
+        num_labels: Optional[int] = None,
         *args,
         **kwargs,
     ):
@@ -161,8 +183,16 @@ class TransformerExperiment(BaseExperiment):
             pretrained_tokenizer = pretrained_model
         self.tokenizer = AutoTokenizer.from_pretrained(pretrained_tokenizer)
 
+        if self.regression and num_labels > 1:
+            raise ValueError(
+                f"Regression is set to True, but num_labels is {num_labels}."
+            )
+        if not self.regression and num_labels == 1:
+            raise ValueError(
+                f"Regression is set to False, but num_labels is {num_labels}."
+            )
         self.model = AutoModelForSequenceClassification.from_pretrained(
-            pretrained_model, num_labels=1
+            pretrained_model, num_labels=num_labels
         )  # default loss for regression (num_labels=1) is MSELoss()
         # TODO possibly move the two lines below somewhere else
         self.tokenized_dataset = self.dataset.map(
@@ -190,14 +220,12 @@ class TransformerExperiment(BaseExperiment):
             per_device_eval_batch_size=eval_batch_size,
             num_train_epochs=epochs,
             weight_decay=weight_decay,
-            metric_for_best_model="r_squared",
-
+            metric_for_best_model="r_squared" if self.regression else "accuracy",
             # # evaluate per epoch:
             # evaluation_strategy="epoch",
             # save_strategy="epoch",
             # load_best_model_at_end=True,
             # logging_strategy="epoch",
-            
             # evaluate per step:
             evaluation_strategy="steps",
             eval_steps=50,
@@ -210,7 +238,11 @@ class TransformerExperiment(BaseExperiment):
             eval_dataset=self.tokenized_dataset[VALIDATION],
             tokenizer=self.tokenizer,
             data_collator=self.data_collator,
-            compute_metrics=compute_metrics,
+            compute_metrics=(
+                compute_metrics_regression
+                if self.regression
+                else compute_metrics_classification
+            ),
             callbacks=[
                 EarlyStoppingCallback(early_stopping_patience=early_stopping_patience)
             ],
@@ -243,7 +275,13 @@ class TransformerExperiment(BaseExperiment):
                 per_device_eval_batch_size=batch_size,
             )
             self.trainer = Trainer(
-                model=self.model, args=test_args, compute_metrics=compute_metrics
+                model=self.model,
+                args=test_args,
+                compute_metrics=(
+                    compute_metrics_regression
+                    if self.regression
+                    else compute_metrics_classification
+                ),
             )
         self.tokenized_dataset = self.dataset.map(
             self._preprocess_function, batched=True
@@ -280,17 +318,24 @@ class TransformerExperiment(BaseExperiment):
         )
 
 
-def compute_metrics(eval_pred):
-    """Determines which metrics to use for evaluation."""
+def compute_metrics_regression(eval_pred):
+    """Determines which metrics to use for regression evaluation."""
     r_squared = evaluate.load("r_squared")
     predictions, labels = eval_pred
     rmse = mean_squared_error(labels, predictions, squared=False)
-    # mae = evaluate.load("mae")
     # pearsonr = evaluate.load("pearsonr")
 
-    predictions, labels = eval_pred
     return {
         "r_squared": r_squared.compute(predictions=predictions, references=labels),
         "rmse": rmse,
         # "pearsonr": pearsonr.compute(predictions=predictions, references=labels),
     }
+
+
+def compute_metrics_classification(eval_pred):
+    """Determines which metrics to use for classification evaluation."""
+    accuracy = evaluate.load("accuracy")
+    logits, labels = eval_pred
+    predictions = np.argmax(logits, axis=-1)
+    # return {"accuracy": accuracy.compute(predictions=predictions, references=labels)}
+    return accuracy.compute(predictions=predictions, references=labels)

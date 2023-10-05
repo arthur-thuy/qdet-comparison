@@ -1,11 +1,13 @@
 # These params are needed for / used by all the model types
 
 # Possible values are string values of [RACE_PP, RACE_PP_4K, RACE_PP_8K, RACE_PP_12K, ARC, ARC_BALANCED, AM]
-dataset_name: race_pp_4000
+dataset_name: race_4000
 # Possible values are [r2de, text2props, random, majority, transformer]
 model_type: transformer
 # If desired, it is possible to specify the name used to save the model.
 model_name: DistilBERT
+regression: false
+num_labels: 2
 
 # # # # #
 
