@@ -173,7 +173,7 @@ class TransformerExperiment(BaseExperiment):
         model_name: str = "model",
         max_length: int = 256,
         pretrained_tokenizer: Optional[PreTrainedTokenizerFast] = None,
-        num_labels: Optional[int] = None,
+        num_labels: int = 1,
         *args,
         **kwargs,
     ):
