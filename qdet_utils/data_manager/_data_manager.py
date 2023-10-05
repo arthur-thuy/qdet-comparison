@@ -51,8 +51,6 @@ class DataManager:
         text_difficulty_df, answer_texts_df = self.get_text_difficulty_and_answer_texts(
             dataset[TRAIN], answer_texts_df, skip_answers_texts
         )
-        # TODO this line below is the old version, I have to update the notebook as well! All the filenames!
-        # text_difficulty_df.to_csv(os.path.join(data_dir, 'for_tf', f'text_difficulty_{dataset_name}_train.csv'), index=False)
         text_difficulty_df.to_csv(
             os.path.join(data_dir, f"tf_{dataset_name}_text_difficulty_train.csv"),
             index=False,

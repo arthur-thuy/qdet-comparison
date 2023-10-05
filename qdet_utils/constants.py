@@ -9,6 +9,8 @@ RACE_PP_12K = 'race_pp_12000'
 ARC = 'arc'
 ARC_BALANCED = 'arc_balanced'
 AM = 'am'
+RACE = 'race'
+RACE_4K = 'race_4000'
 
 # name of splits (used in filenames, etc.)
 DEV = 'dev'

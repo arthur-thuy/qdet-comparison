@@ -6,6 +6,7 @@ from qdet_utils.constants import (
     ARC,
     ARC_BALANCED,
     AM,
+    RACE
 )
 from qdet_utils.data_manager import (
     RaceDatamanager,
@@ -19,24 +20,43 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    # RACE++
-    logger.info("Starting preparation RACE++")
+    # # RACE++
+    # logger.info("Starting preparation RACE++")
+    # race_data_dir = "data/raw/RACE"
+    # race_c_data_dir = "data/raw/race-c-master/data"
+    # race_pp_dm = RaceDatamanager()
+    # dataset = race_pp_dm.get_racepp_dataset(race_data_dir, race_c_data_dir, DATA_DIR)
+    # # whole RACE++
+    # race_pp_dm.convert_to_transformers_format_and_store_dataset(
+    #     dataset, DATA_DIR, RACE_PP, skip_answers_texts=False
+    # )
+
+    # # sub-sampled datasets
+    # for training_size in [4_000, 8_000, 12_000]:
+    #     sub_sampled_dataset = race_pp_dm.get_subsampled_racepp_dataset(
+    #         DATA_DIR, training_size, DATA_DIR
+    #     )
+    #     dataset_name = f"{RACE_PP}_{training_size}"
+    #     race_pp_dm.convert_to_transformers_format_and_store_dataset(
+    #         sub_sampled_dataset, DATA_DIR, dataset_name, False
+    #     )
+
+    # RACE
+    logger.info("Starting preparation RACE")
     race_data_dir = "data/raw/RACE"
-    race_c_data_dir = "data/raw/race-c-master/data"
-    race_pp_dm = RaceDatamanager()
-    dataset = race_pp_dm.get_racepp_dataset(race_data_dir, race_c_data_dir, DATA_DIR)
-    # whole RACE++
-    race_pp_dm.convert_to_transformers_format_and_store_dataset(
-        dataset, DATA_DIR, RACE_PP, skip_answers_texts=False
+    race_dm = RaceDatamanager()
+    dataset = race_dm.get_race_dataset(race_data_dir, DATA_DIR)
+    race_dm.convert_to_transformers_format_and_store_dataset(
+        dataset, DATA_DIR, RACE, skip_answers_texts=False
     )
 
     # sub-sampled datasets
-    for training_size in [4_000, 8_000, 12_000]:
-        sub_sampled_dataset = race_pp_dm.get_subsampled_racepp_dataset(
+    for training_size in [4_000]:
+        sub_sampled_dataset = race_dm.get_subsampled_race_dataset(
             DATA_DIR, training_size, DATA_DIR
         )
-        dataset_name = f"{RACE_PP}_{training_size}"
-        race_pp_dm.convert_to_transformers_format_and_store_dataset(
+        dataset_name = f"{RACE}_{training_size}"
+        race_dm.convert_to_transformers_format_and_store_dataset(
             sub_sampled_dataset, DATA_DIR, dataset_name, False
         )
 

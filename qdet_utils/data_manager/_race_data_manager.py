@@ -148,3 +148,29 @@ class RaceDatamanager(DataManager):
             df = self._append_new_reading_passage_to_df(df, reading_passage_data, split, level=self.COLLEGE)
         assert set(df.columns) == set(DF_COLS)
         return df
+    
+    # added by Arthur (adapted from get_subsampled_racepp_dataset)
+    def get_subsampled_race_dataset(
+            self,
+            data_dir: str,
+            training_size: int,
+            output_data_dir: str,
+            random_state: int = None,
+            balanced_sampling: bool = True,
+    ) -> Dict[str, pd.DataFrame]:
+        df_train = pd.read_csv(os.path.join(data_dir, f'race_{TRAIN}.csv'))
+        df_dev = pd.read_csv(os.path.join(data_dir, f'race_{DEV}.csv'))
+        df_test = pd.read_csv(os.path.join(data_dir, f'race_{TEST}.csv'))
+        subsampled_dataset = dict()
+        if balanced_sampling:
+            df_train = pd.concat([df_train[df_train[DIFFICULTY] == 0].sample(training_size, random_state=random_state),
+                                  df_train[df_train[DIFFICULTY] == 1].sample(training_size, random_state=random_state)])
+        else:
+            df_train = df_train.sample(training_size, random_state=random_state)
+        df_train.to_csv(os.path.join(output_data_dir, f'race_{training_size}_{TRAIN}.csv'), index=False)
+        df_dev.to_csv(os.path.join(output_data_dir, f'race_{training_size}_{DEV}.csv'), index=False)
+        df_test.to_csv(os.path.join(output_data_dir, f'race_{training_size}_{TEST}.csv'), index=False)
+        subsampled_dataset[TRAIN] = df_train.copy()
+        subsampled_dataset[DEV] = df_dev.copy()
+        subsampled_dataset[TEST] = df_test.copy()
+        return subsampled_dataset
