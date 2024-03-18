@@ -6,3 +6,10 @@ The published version of the paper is available at \[link to be added after publ
 
 The submitted version of the paper is available at the following [link](https://arxiv.org/abs/2305.10236).
 
+
+## Getting started
+
+```bash
+source venv/bin/activate
+```
+
