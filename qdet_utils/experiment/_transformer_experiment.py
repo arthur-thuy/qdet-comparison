@@ -230,6 +230,7 @@ class TransformerExperiment(BaseExperiment):
             evaluation_strategy="steps",
             eval_steps=50,
             load_best_model_at_end=True,
+            save_total_limit=1, # only save the best model (delete previous checkpoints)
         )
         self.trainer = Trainer(
             model=self.model,
